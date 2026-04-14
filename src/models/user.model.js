@@ -59,7 +59,7 @@ userSchema.methods.accessTokenGenerator=  function(){
         username:this.username,
         fullname:this.fullname
     },
- procces.env.ACCESS_TOKEN_SECRET,
+ process.env.ACCESS_TOKEN_SECRET,
  {
     expiresIn:process.env.ACCESS_TOKEN_EXPIRY
  }
@@ -70,7 +70,7 @@ userSchema.methods.refreshTokenGenerator=  function(){
     return jwt.sign({
         _id:this._id,
     },
- procces.env.REFRESH_TOKEN_SECRET,
+ process.env.REFRESH_TOKEN_SECRET,
  {
     expiresIn:process.env.REFRESH_TOKEN_EXPIRY
  }
