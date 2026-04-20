@@ -11,7 +11,7 @@ connectDB()
             throw err
         })
     app.listen(process.env.PORT,()=>{
-            console.log("App sun rha hai....");
+            console.log("App sun rha hai on ....",process.env.PORT );
         })
     }
 )
