@@ -6,4 +6,4 @@ class ApiResponse {
         this.success=statuscode<400
     }
 }
-export const ApiResponse;
+export default ApiResponse;
