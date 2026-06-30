@@ -27,7 +27,7 @@ const userSchema = new Schema({
         type: String, //cloudinary url
         required:true
     },
-    overImage:{
+    coverImage:{
         type: String, //cloudinary url
     },
     watchHistory:[{
@@ -46,11 +46,11 @@ const userSchema = new Schema({
 });
 userSchema.pre("save",async function (next) {
     if(!this.isModified("password")) return next();
-    this.password=bcrypt.hash(this.password,7);
+    this.password= await bcrypt.hash(this.password,7);
      next();
 })
-userSchema.methods.isPasswordUpdated= async function(passw){
-     return await bcrypt.compare(passw,this.password) ;
+userSchema.methods.isPasswordUpdated= async function(passWord){
+     return await bcrypt.compare(passWord,this.password) ;
 }
 userSchema.methods.accessTokenGenerator=  function(){
     return jwt.sign({
