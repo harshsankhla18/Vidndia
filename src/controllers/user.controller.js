@@ -76,14 +76,14 @@ const loginUser = asyncHandler(async (req,res) =>{
     if(!validPassword){
         throw new ApiError(401,"Wrong Password");
     }
-    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user_id);
-    const loggedUser = await User.findById(user_id).select("-password -refreshToken");
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(validUser._id);
+    const loggedUser = await User.findById(validUser._id).select("-password -refreshToken");
     const options = {
         httpOnly : true,
-        secure : true
+        secure : true,
+        sameSite: "strict"
     }
     return res.status(200)
-    .cookie("accessToekn",accessToken,options)
     .cookie("refreshToken",refreshToken,options)
     .json(
         new ApiResponse(
@@ -91,7 +91,6 @@ const loginUser = asyncHandler(async (req,res) =>{
             {
                 user : loggedUser,
                 accessToken,
-                refreshToken
             },
             "User LoggedIn successfully"
     )
