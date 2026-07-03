@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {User} from "../models/user.model.js"
-import {fileUploadOnCloudinary} from "../utils/cloudinary.js"
+import {deleteFromCloudinary, fileUploadOnCloudinary} from "../utils/cloudinary.js"
 import  ApiResponse  from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 const generateAccessAndRefreshToken = async (user_id) =>{
@@ -52,8 +52,14 @@ const registerUser = asyncHandler (async (req,res)=>{
     const user = await User.create({
         username : username?.toLowerCase(),
         fullName,
-        avatar : Avatar.url,
-        coverImage: (coverImage) ? coverImage.url : "",
+        avatar : {
+            url:Avatar.url,
+            public_id:Avatar.public_id
+        },
+        coverImage:{
+            url: (coverImage) ? coverImage.url : "",
+            public_id: (coverImage) ? coverImage.public_id : ""
+        },
         email,
         password
     })
@@ -203,10 +209,16 @@ const updateAvatar = asyncHandler(async (req,res) => {
     if(!avatar?.url){
          throw new ApiError(400,"Error While Uploading on Avatar");
     }
+    const oldAvatar = req.user?.avatar?.public_id;
+    await deleteFromCloudinary(oldAvatar);
     const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
-                avatar : avatar.url
+                avatar :{
+                    url : avatar.url,
+                    public_id : avatar.public_id,
+                } 
+
             }
         },
         {
@@ -226,10 +238,15 @@ const updateCoverImage = asyncHandler(async (req,res) => {
     if(!coverImage?.url){
          throw new ApiError(400,"Error While Uploading on CoverImage");
     }
+    const oldCoverImage = req.user?.coverImage?.public_id;
+    await deleteFromCloudinary(oldCoverImage);
     const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
-                coverImage : coverImage.url
+                coverImage :{
+                    url: coverImage.url,
+                    public_id:coverImage.public_id
+                }
             }
         },
         {

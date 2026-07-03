@@ -24,11 +24,22 @@ const userSchema = new Schema({
         index:true
     },
     avatar:{
-        type: String, //cloudinary url
+      url: { 
+        type: String, 
         required:true
     },
+    public_id:{
+         type: String, 
+        required:true
+    }
+    },
     coverImage:{
-        type: String, //cloudinary url
+        url : {
+            type: String, 
+        },
+        public_id:{
+            type:String
+        }
     },
     watchHistory:[{
         type: mongoose.Schema.Types.ObjectId,
@@ -57,7 +68,7 @@ userSchema.methods.accessTokenGenerator=  function(){
         _id:this._id,
         email:this.email,
         username:this.username,
-        fullname:this.fullname
+        fullName:this.fullName
     },
  process.env.ACCESS_TOKEN_SECRET,
  {
