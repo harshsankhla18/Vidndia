@@ -14,12 +14,18 @@ const generateAccessAndRefreshToken = async (user_id) =>{
         return {accessToken, refreshToken};
 
     }catch(error){
+        
         throw new ApiError(500,"Something went wrong while generating Tokens");
         
     }
 
 }
-
+const options = {
+        httpOnly : true,
+        secure : true,
+        sameSite: "strict",
+        maxAge: 10 * 24 * 60 * 60 * 1000
+    }
 const registerUser = asyncHandler (async (req,res)=>{
     const {username, fullName, email, password} = req.body;
     if ([username, fullName, email, password].some((field)=> field?.trim() === "")) {
@@ -57,8 +63,21 @@ const registerUser = asyncHandler (async (req,res)=>{
     if(!createdUser){
         throw new ApiError("500","Failed to register User")
     }
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(createdUser._id);
+    const loggedUser = await User.findById(createdUser._id).select("-password -refreshToken");
     
-    return res.status(201).json(new ApiResponse(200,createdUser,"User Created Successfully"));
+    return res.status(200)
+    .cookie("refreshToken",refreshToken,options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user : loggedUser,
+                accessToken,
+            },
+            "User Created and LoggedIn successfully"
+    )
+    );
     
 })
 const loginUser = asyncHandler(async (req,res) =>{
@@ -78,12 +97,6 @@ const loginUser = asyncHandler(async (req,res) =>{
     }
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(validUser._id);
     const loggedUser = await User.findById(validUser._id).select("-password -refreshToken");
-    const options = {
-        httpOnly : true,
-        secure : true,
-        sameSite: "strict",
-        maxAge: 10 * 24 * 60 * 60 * 1000
-    }
     return res.status(200)
     .cookie("refreshToken",refreshToken,options)
     .json(
@@ -109,17 +122,12 @@ await User.findByIdAndUpdate(
         new: true
     }
 )
-const options = {
-        httpOnly : true,
-        secure : true,
-        sameSite: "strict",
-    }
     return res.status(200)
     .clearCookie("refreshToken",options)
     .json(new ApiResponse(200,{},"User Logged Out"));
 })
 const refreshAccessToken = asyncHandler(async (req,res) => {
-    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     if(!incomingRefreshToken){
         throw new ApiError(401,"Unauthorized Access");
     }
@@ -134,12 +142,6 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
     }
  
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
-    const options = {
-        httpOnly : true,
-        secure : true,
-        sameSite: "strict",
-        maxAge: 10 * 24 * 60 * 60 * 1000
-    }
     return res.status(200)
     .cookie("refreshToken",refreshToken,options)
     .json(new ApiResponse(200,{
