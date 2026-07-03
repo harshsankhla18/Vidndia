@@ -203,7 +203,7 @@ const updateAvatar = asyncHandler(async (req,res) => {
     if(!avatar?.url){
          throw new ApiError(400,"Error While Uploading on Avatar");
     }
-    await User.findByIdAndUpdate(req.user._id,
+    const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
                 avatar : avatar.url
@@ -215,7 +215,7 @@ const updateAvatar = asyncHandler(async (req,res) => {
     ).select("-password -refreshToken")
 
     return res.status(200)
-    .json(new ApiResponse(200,{},"Avatar Updated Successfully"));
+    .json(new ApiResponse(200,user,"Avatar Updated Successfully"));
 })
 const updateCoverImage = asyncHandler(async (req,res) => {
     const coverImageLocalPath = req.file?.path;
@@ -226,7 +226,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
     if(!coverImage?.url){
          throw new ApiError(400,"Error While Uploading on CoverImage");
     }
-    await User.findByIdAndUpdate(req.user._id,
+    const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
                 coverImage : coverImage.url
@@ -238,7 +238,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
     ).select("-password -refreshToken")
 
     return res.status(200)
-    .json(new ApiResponse(200,{},"CoverImage Updated Successfully"));
+    .json(new ApiResponse(200,user,"CoverImage Updated Successfully"));
 })
 export { registerUser, loginUser, logoutUser, refreshAccessToken, getCurrentUser, updateDetails, updateAvatar, updateCoverImage };
 
