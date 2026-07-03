@@ -210,7 +210,6 @@ const updateAvatar = asyncHandler(async (req,res) => {
          throw new ApiError(400,"Error While Uploading on Avatar");
     }
     const oldAvatar = req.user?.avatar?.public_id;
-    await deleteFromCloudinary(oldAvatar);
     const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
@@ -225,7 +224,7 @@ const updateAvatar = asyncHandler(async (req,res) => {
             new:true
         }
     ).select("-password -refreshToken")
-
+    await deleteFromCloudinary(oldAvatar);
     return res.status(200)
     .json(new ApiResponse(200,user,"Avatar Updated Successfully"));
 })
@@ -239,7 +238,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
          throw new ApiError(400,"Error While Uploading on CoverImage");
     }
     const oldCoverImage = req.user?.coverImage?.public_id;
-    await deleteFromCloudinary(oldCoverImage);
+    
     const user = await User.findByIdAndUpdate(req.user._id,
         {
             $set : {
@@ -253,7 +252,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
             new:true
         }
     ).select("-password -refreshToken")
-
+    await deleteFromCloudinary(oldCoverImage);
     return res.status(200)
     .json(new ApiResponse(200,user,"CoverImage Updated Successfully"));
 })
