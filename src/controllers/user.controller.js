@@ -224,7 +224,7 @@ const updateAvatar = asyncHandler(async (req,res) => {
             new:true
         }
     ).select("-password -refreshToken")
-    await deleteFromCloudinary(oldAvatar);
+    if(oldAvatar) await deleteFromCloudinary(oldAvatar);
     return res.status(200)
     .json(new ApiResponse(200,user,"Avatar Updated Successfully"));
 })
@@ -252,7 +252,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
             new:true
         }
     ).select("-password -refreshToken")
-    await deleteFromCloudinary(oldCoverImage);
+   if(oldCoverImage) await deleteFromCloudinary(oldCoverImage);
     return res.status(200)
     .json(new ApiResponse(200,user,"CoverImage Updated Successfully"));
 })
