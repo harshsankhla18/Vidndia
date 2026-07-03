@@ -66,11 +66,11 @@ const registerUser = asyncHandler (async (req,res)=>{
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(createdUser._id);
     const loggedUser = await User.findById(createdUser._id).select("-password -refreshToken");
     
-    return res.status(200)
+    return res.status(201)
     .cookie("refreshToken",refreshToken,options)
     .json(
         new ApiResponse(
-            200,
+            201,
             {
                 user : loggedUser,
                 accessToken,
