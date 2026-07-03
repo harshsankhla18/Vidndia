@@ -119,13 +119,13 @@ const options = {
     .json(new ApiResponse(200,{},"User Logged Out"));
 })
 const refreshAccessToken = asyncHandler(async (req,res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
     if(!incomingRefreshToken){
-        throw new ApiError(4001,"Unauthorized Access");
+        throw new ApiError(401,"Unauthorized Access");
     }
    try {
     const decodedToken = jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET);
-    const user=await User.findById(decodedToken._id);
+    const user = await User.findById(decodedToken._id);
     
     if(incomingRefreshToken !== user?.refreshToken){
      throw new ApiError(400,"Refresh Token Expired")
