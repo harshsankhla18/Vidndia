@@ -154,5 +154,41 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
    }
 
 })
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const getCurrentUser = asyncHandler(async (req,res) => {
+    return res.status(200)
+    .json(new ApiResponse(200,req.user,"Current User Fetched "))
+})
+const changePassword = asyncHandler(async (req,res) => {
+    const {oldPassword, newPassword} = req.body;
+    const user = await User.findById(req.user._id).select("-password -refreshToken");
+    const isPasswordCorrect = await user.isPasswordUpdated(oldPassword);
+    if(!isPasswordCorrect){
+        throw new ApiError(400,"Password Incorrect");
+    }
+    if(oldPassword == newPassword){
+        throw new ApiError(400,"New Password should be different from old Password")
+    }
+    user.password=newPassword;
+    user.save({validateBeforeSave : false});
+    return res.status(200).json(200,{},"Password Updated Successfully")
+})
+const updateDetails = asyncHandler(async (req,res) => {
+    const {fullName, email, username} = req.body;
+    if(!fullName && !email && !username){
+        throw new ApiError(400,"No content provided for update")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            fullname,
+            email,
+            username
+        },
+   {new:true}
+    ).select("-password -refreshToken");
+    
+    return res.status(200).json(new ApiResponse(200,{},"User Details Updated Successfully"));
+    
+})
+export { registerUser, loginUser, logoutUser, refreshAccessToken, getCurrentUser };
 
