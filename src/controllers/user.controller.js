@@ -321,6 +321,57 @@ const getUserChannelProfile = asyncHandler(async (req,res) => {
     const channel = user[0];
     return res.status(200).json(new ApiResponse(200,channel,"User Fetched Successfully"));
 })
+const getWatchHistory = asyncHandler(async (req,res) => {
+    if(!req.user){
+        throw new ApiError("User is required");
+    }
+    const user = await User.aggregate([
+        {
+            $match : {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup : {
+                from : "videos",
+                localField : "watchHistory",
+                foreignField : "_id",
+                as : "watchHistoy",
+                pipeline : [
+                    {  
+                        $lookup : {
+                            from : "users",
+                            localField : "owner",
+                            foreignField: "_id",
+                            as : "owner",
+                            pipeline : [
+                                {
+                                    $project : {
+                                        username:1,
+                                        fullName:1,
+                                        avatar : 1,
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                            $addFields : {
+                                owner :{
+                                    $first : "$owner"
+                                }
+                            }
+                    }
+                ]
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, getCurrentUser, updateDetails, updateAvatar, updateCoverImage };
+            }
+        }
+       
+    ]);
+   return res.status(200)
+   .json(new ApiResponse(200,user[0].watchHistory,"Fetched History Successfully"));
+
+
+})
+export { registerUser, loginUser, logoutUser, refreshAccessToken, getCurrentUser, updateDetails, updateAvatar, updateCoverImage, getUserChannelProfile, getWatchHistory };
 
