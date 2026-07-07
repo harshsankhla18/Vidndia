@@ -4,6 +4,7 @@ import {User} from "../models/user.model.js"
 import {deleteFromCloudinary, fileUploadOnCloudinary} from "../utils/cloudinary.js"
 import  ApiResponse  from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 const generateAccessAndRefreshToken = async (user_id) =>{
     try{
         const user = await User.findById(user_id);
@@ -259,7 +260,7 @@ const updateCoverImage = asyncHandler(async (req,res) => {
 const getUserChannelProfile = asyncHandler(async (req,res) => {
     const {username} = req.params;
     if(!username?.trim()){
-        return new ApiError(400,"Username is required");
+        throw new ApiError(400,"Username is required");
     }
     const user = await User.aggregate([
         {
@@ -291,13 +292,11 @@ const getUserChannelProfile = asyncHandler(async (req,res) => {
                     $size : "$subscribedTo"
                 },
                 "isSubscribed" : {
-                    $cond : {
-                        $if : { $in : [req.user?._id,"$subscribers.subscriber"]},
-                        $then : true,
-                        $else : false
+                    
+                      $in : [new mongoose.Types.ObjectId(req.user?._id),"$subscribers.subscriber"]
                     }
                 }
-            }
+            
         },
         {
             $project : {
@@ -315,15 +314,15 @@ const getUserChannelProfile = asyncHandler(async (req,res) => {
         }
 
     ]);
-    if(!user?.length()){
-        throw new ApiError(400,"Channel Not Found")
+    if(!user?.length){
+        throw new ApiError(404,"Channel Not Found")
     }
     const channel = user[0];
     return res.status(200).json(new ApiResponse(200,channel,"User Fetched Successfully"));
 })
 const getWatchHistory = asyncHandler(async (req,res) => {
     if(!req.user){
-        throw new ApiError("User is required");
+        throw new ApiError(400,"User is required");
     }
     const user = await User.aggregate([
         {
@@ -336,7 +335,7 @@ const getWatchHistory = asyncHandler(async (req,res) => {
                 from : "videos",
                 localField : "watchHistory",
                 foreignField : "_id",
-                as : "watchHistoy",
+                as : "watchHistory",
                 pipeline : [
                     {  
                         $lookup : {
@@ -369,7 +368,7 @@ const getWatchHistory = asyncHandler(async (req,res) => {
        
     ]);
    return res.status(200)
-   .json(new ApiResponse(200,user[0].watchHistory,"Fetched History Successfully"));
+   .json(new ApiResponse(200,user[0]?.watchHistory,"Fetched History Successfully"));
 
 
 })
