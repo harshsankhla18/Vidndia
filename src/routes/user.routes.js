@@ -22,11 +22,11 @@ router.route("/register").post(
 router.route("/login").post(loginUser);
 router.route("/logout").post(VerifyJWT,logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
-router.route("/change-password").post(VerifyJWT, changePassword);
+router.route("/change-password").patch(VerifyJWT, changePassword);
 router.route("/current-user").get(VerifyJWT, getCurrentUser);
 router.route("/update-account-details").patch(VerifyJWT, updateDetails);
 router.route("/update-avatar").patch(VerifyJWT,upload.single("avatar"),updateAvatar);
-router.route("/update-coverImage").patch(VerifyJWT,upload.single("avatar"),updateCoverImage);
+router.route("/update-coverImage").patch(VerifyJWT,upload.single("coverimage"),updateCoverImage);
 router.route("/c/:username").get(VerifyJWT,getUserChannelProfile);
 router.route("/history").get(VerifyJWT,getWatchHistory);
 export default router;
