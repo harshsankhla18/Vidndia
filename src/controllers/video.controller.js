@@ -4,6 +4,10 @@ import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteFromCloudinary, fileUploadOnCloudinary } from "../utils/cloudinary.js";
+import { Like } from "../models/like.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Playlist } from "../models/playlist.model.js";
+import { User } from "../models/user.model.js";
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body
@@ -113,8 +117,51 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200,updatedVideo,"Video Updated Successfully"))
 })
+const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    if(!mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400,"Invalid Video Id");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+    if(!video?.owner.equals(req.user._id)){
+        throw new ApiError(403,"Access Denied");
+    }
+    await deleteFromCloudinary(video.videoFile.public_id);
+    await deleteFromCloudinary(video.thumbnail.public_id);
+    await Promise.all([
+    Like.deleteMany({ video: videoId }),
+    Comment.deleteMany({ video: videoId }),
+    Playlist.updateMany(
+        {
+            videos : videoId
+        },
+        {
+            $pull : {
+                videos : videoId
+            }
+        }
+    ),
+    User.updateMany(
+    {
+        watchHistory : videoId
+    },
+    {
+        $pull : {
+            watchHistory : videoId
+        }
+    }
+)   
+     ]);
+     await Video.findByIdAndDelete(videoId);
+    return res.status(200).json(new ApiResponse(200,{},"Video Successfully Deleted"))
+})
+
 export {
     publishAVideo,
     getVideoById,
-    updateVideo
+    updateVideo,
+    deleteVideo
 };
