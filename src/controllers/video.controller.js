@@ -158,7 +158,23 @@ const deleteVideo = asyncHandler(async (req, res) => {
      await Video.findByIdAndDelete(videoId);
     return res.status(200).json(new ApiResponse(200,{},"Video Successfully Deleted"))
 })
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(videoId)) {
+        throw new ApiError(400, "Invalid Video Id");
+    }
+    const video = await Video.findById(videoId);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+    if (!video.owner.equals(req.user._id)) {
+        throw new ApiError(403, "Access Denied");
+    }
+    video.isPublished = !video.isPublished;
+    await video.save();
+    return res.status(200).json(new ApiResponse(200,"Video publish status toggled successfully"))
 
+})
 export {
     publishAVideo,
     getVideoById,
