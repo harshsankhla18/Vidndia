@@ -1,30 +1,30 @@
-import { User } from "../models/user.model.js";
+import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { fileUploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, fileUploadOnCloudinary } from "../utils/cloudinary.js";
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body
     if(!title?.trim()){
         throw new ApiError(400,"Video Title cannot be empty");
     }
-    const localThumbnailPath = req.files?.thumbnailToUpload[0].path;
+    const localThumbnailPath = req.files?.thumbnail?.[0]?.path;
     if(!localThumbnailPath){
         throw new ApiError(400,"Thumbnail is required")
     }
-    const localVideoPath = req.files?.videoToUpload[0].path;
+    const localVideoPath = req.files?.video?.[0]?.path;
     if(!localVideoPath){
         throw new ApiError(400,"Video is missing")
     }
     const thumbnail = await fileUploadOnCloudinary(localThumbnailPath);
     if(!thumbnail){
-        throw new ApiError(400,"Thumbnail upload failed");
+        throw new ApiError(500,"Thumbnail upload failed");
     }
     const uploadedVideo = await fileUploadOnCloudinary(localVideoPath);
     if(!uploadedVideo){
-        throw new ApiError(400,"Video upload failed");
+        throw new ApiError(500,"Video upload failed");
     }
     const video = await Video.create({
         videoFile : {
@@ -47,6 +47,74 @@ const publishAVideo = asyncHandler(async (req, res) => {
     return res.status(201)
     .json(new ApiResponse(201,video,"Video Successfully Uploaded"));
 })
+const getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    if(!mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400,"Invalid Video Id");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+    return res.status(200).json(new ApiResponse(200,video,"Video Found"));
+})
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+     if(!mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400,"Invalid Video Id");
+    }
+    const video = await Video.findById(videoId);
+    
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+    if(!video.owner.equals(req.user._id)){
+        throw new ApiError(403,"Access Denied");
+    }
+    const {title ,description} = req.body;
+    const updatefields = {};
+    if(title?.trim()){
+        updatefields.title = title.trim();
+    }
+    
+    if(description?.trim()){
+        updatefields.description = description.trim();
+    }
+    
+    const thumbnailLocalPath = req.file?.path;
+    const oldThumbnail = video.thumbnail?.public_id;
+    if(thumbnailLocalPath){
+       const thumbnail = await fileUploadOnCloudinary(thumbnailLocalPath);
+       if(!thumbnail){
+            throw new ApiError(500,"Failed to upload thumbnail on cloudinary");
+       }
+       updatefields.thumbnail = {
+        url : thumbnail.url,
+        public_id : thumbnail.public_id
+       }
+    }
+    if(Object.keys(updatefields).length === 0){
+        throw new ApiError(400,"No Content to update");
+    }
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+    {
+        $set : updatefields
+    },
+    {
+        new : true
+    }
+    )
+    if(!updatedVideo){
+        throw new ApiError(500,"Failed to update video");
+    }
+    if(thumbnailLocalPath){
+        await deleteFromCloudinary(oldThumbnail);
+    }
+    return res.status(200).json(new ApiResponse(200,updatedVideo,"Video Updated Successfully"))
+})
 export {
-    publishAVideo
+    publishAVideo,
+    getVideoById,
+    updateVideo
 };
