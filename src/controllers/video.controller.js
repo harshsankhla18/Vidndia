@@ -175,10 +175,58 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200,"Video publish status toggled successfully"))
 
 })
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = "1", limit = "10", query, sortBy, sortType, userId } = req.query
+     if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(400, "Invalid User Id");
+    }
+    const match = {
+            isPublished: true
+        };
+
+        if (userId) {
+            match.owner = new mongoose.Types.ObjectId(userId);
+        }
+
+        if (query) {
+            match.$or = [
+                {
+                    title: {
+                        $regex: query,
+                        $options: "i"
+                    }
+                },
+                {
+                    description: {
+                        $regex: query,
+                        $options: "i"
+                    }
+                }
+            ];
+        }
+    const aggregatedVideo = Video.aggregate([
+        {
+            $match : match
+        },
+        {
+            $sort : {
+                [sortBy || "views"] : sortType === "asc" ? 1 : -1
+            }
+        }
+    ]);
+    const video = await Video.aggregatePaginate(
+        aggregatedVideo,
+         {
+        page : Number(page), limit : Number(limit)
+    },
+    );
+    return res.status(200).json(new ApiResponse(200,video,"All videos fetched successfully"))
+})
 export {
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getAllVideos
 };
