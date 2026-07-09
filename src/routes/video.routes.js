@@ -24,5 +24,5 @@ router.route("/video/:videoId")
     updateVideo
 );
 
-router.route("/video/delete/:videoId").get(deleteVideo);
-router.route("/video/toggle/:videoId").get(togglePublishStatus);
+router.route("/video/delete/:videoId").get(VerifyJWT, deleteVideo);
+router.route("/video/toggle/:videoId").get(VerifyJWT, togglePublishStatus);
