@@ -33,11 +33,31 @@ const getUserTweets = asyncHandler(async (req, res) => {
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
-    //TODO: update tweet
+   const { tweetId } = req.params;
+   const { newContent } = req.body;
+    if(!mongoose.Types.ObjectId.isValid(tweetId)){
+        throw new ApiError(400, "Invalid Tweet Id");
+    }
+    if(!newContent?.trim()){
+        throw new ApiError(400,"Tweet cannot be empty");
+    }
+    const tweet  = await Tweet.findById(tweetId);
+    if(!tweet){
+        throw new ApiError(404, "Tweet not found");
+    }
+    if(!tweet.owner.equals(req.user._id)){
+        throw new ApiError(403, "Only the tweet owner can edit this tweet");
+    }
+    if (tweet.content === newContent?.trim()){
+        throw new ApiError(400,"Tweet cannot be same as old Tweet");
+    }
+    tweet.content = newContent.trim();
+    await tweet.save();
+    return res.status(200).json(new ApiResponse(200,tweet,"Tweet Updated Successfully"));
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
-    //TODO: delete tweet
+    
 })
 
 export {
