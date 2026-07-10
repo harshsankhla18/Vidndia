@@ -18,7 +18,18 @@ const createTweet = asyncHandler(async (req, res) => {
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
-    
+    const {userId} = req.params;
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+        throw new ApiError(400,"Invalid User");
+    }
+    const userTweets = await Tweet.aggregate([
+        {
+            $match : {
+                owner : new mongoose.Types.ObjectId(userId)
+            }
+        }
+    ]);
+    return res.status(200).json(new ApiResponse(200,userTweets,"Fetched all user tweets"));
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
