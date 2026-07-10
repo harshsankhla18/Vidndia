@@ -50,7 +50,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     return res.status(201)
     .json(new ApiResponse(201,video,"Video Successfully Uploaded"));
-})
+});
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     if(!mongoose.Types.ObjectId.isValid(videoId)){
@@ -61,7 +61,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(404,"Video not found");
     }
     return res.status(200).json(new ApiResponse(200,video,"Video Found"));
-})
+});
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
      if(!mongoose.Types.ObjectId.isValid(videoId)){
@@ -116,7 +116,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         await deleteFromCloudinary(oldThumbnail);
     }
     return res.status(200).json(new ApiResponse(200,updatedVideo,"Video Updated Successfully"))
-})
+});
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     if(!mongoose.Types.ObjectId.isValid(videoId)){
@@ -157,7 +157,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
      ]);
      await Video.findByIdAndDelete(videoId);
     return res.status(200).json(new ApiResponse(200,{},"Video Successfully Deleted"))
-})
+});
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
@@ -174,11 +174,19 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     await video.save();
     return res.status(200).json(new ApiResponse(200,"Video publish status toggled successfully"))
 
-})
+});
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = "1", limit = "10", query, sortBy, sortType, userId } = req.query
      if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(400, "Invalid User Id");
+    }
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+    throw new ApiError(400, "Page must be a natural number");
+    }
+    if (!Number.isInteger(limitNumber) || limitNumber <= 1 || limitNumber >= 100) {
+    throw new ApiError(400, "Limit must be between 1 and 100");
     }
     const match = {
             isPublished: true
@@ -210,18 +218,19 @@ const getAllVideos = asyncHandler(async (req, res) => {
         },
         {
             $sort : {
-                [sortBy || "views"] : sortType === "asc" ? 1 : -1
+                [sortBy || "views"] : sortType === "asc" ? 1 : -1,
+                "createdAt" : -1,
             }
         }
     ]);
     const video = await Video.aggregatePaginate(
         aggregatedVideo,
          {
-        page : Number(page), limit : Number(limit)
+        page : pageNumber, limit : limitNumber
     },
     );
-    return res.status(200).json(new ApiResponse(200,video,"All videos fetched successfully"))
-})
+    return res.status(200).json(new ApiResponse(200,video,"All videos fetched successfully"));
+});
 export {
     publishAVideo,
     getVideoById,
