@@ -20,4 +20,7 @@ app.use("/api/v1/",videorouter);
 import tweetrouter from "./routes/tweet.routes.js";
 app.use("/api/v1/tweet",tweetrouter);
 
+import subscriptionrouter from "./routes/subscription.routes.js";
+app.use("/api/v1/subscription",subscriptionrouter);
+
 export { app };
