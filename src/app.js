@@ -12,6 +12,12 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import userrouter from "./routes/user.routes.js";
-app.use("/api/v1/users",userrouter)
-export { app };
+app.use("/api/v1/users",userrouter);
 
+import videorouter from "./routes/video.routes.js";
+app.use("/api/v1/",videorouter);
+
+import tweetrouter from "./routes/tweet.routes.js";
+app.use("/api/v1/tweet",tweetrouter);
+
+export { app };
