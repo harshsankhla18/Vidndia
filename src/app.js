@@ -23,4 +23,7 @@ app.use("/api/v1/tweet",tweetrouter);
 import subscriptionrouter from "./routes/subscription.routes.js";
 app.use("/api/v1/subscription",subscriptionrouter);
 
+import likeRouter from "./routes/like.routes.js"
+app.use("/api/v1/likes", likeRouter);
+
 export { app };
