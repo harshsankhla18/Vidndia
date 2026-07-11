@@ -31,7 +31,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
         }
     ]);
     return res.status(200).json(new ApiResponse(200,userTweets,"Fetched all user tweets"));
-})
+});
 
 const updateTweet = asyncHandler(async (req, res) => {
    const { tweetId } = req.params;
@@ -55,7 +55,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     tweet.content = newContent.trim();
     await tweet.save();
     return res.status(200).json(new ApiResponse(200,tweet,"Tweet Updated Successfully"));
-})
+});
 
 const deleteTweet = asyncHandler(async (req, res) => {
      const { tweetId } = req.params;
@@ -77,7 +77,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
         );
     
     return res.status(200).json(new ApiResponse(200,{},"Tweet Deleted Successfully"))
-})
+});
 
 export {
     createTweet,
