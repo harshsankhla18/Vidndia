@@ -26,4 +26,7 @@ app.use("/api/v1/subscription",subscriptionrouter);
 import likeRouter from "./routes/like.routes.js"
 app.use("/api/v1/likes", likeRouter);
 
+import playlistRouter from "./routes/playlist.routes.js"
+app.use("/api/v1/playlists", playlistRouter);
+
 export { app };
