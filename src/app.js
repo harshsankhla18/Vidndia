@@ -15,7 +15,7 @@ import userrouter from "./routes/user.routes.js";
 app.use("/api/v1/users",userrouter);
 
 import videorouter from "./routes/video.routes.js";
-app.use("/api/v1/",videorouter);
+app.use("/api/v1/videos",videorouter);
 
 import tweetrouter from "./routes/tweet.routes.js";
 app.use("/api/v1/tweet",tweetrouter);
@@ -28,5 +28,8 @@ app.use("/api/v1/likes", likeRouter);
 
 import playlistRouter from "./routes/playlist.routes.js"
 app.use("/api/v1/playlists", playlistRouter);
+
+import commentRouter from "./routes/comment.routes.js"
+app.use("/api/v1/comments", commentRouter);
 
 export { app };

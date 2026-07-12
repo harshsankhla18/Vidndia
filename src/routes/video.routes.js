@@ -3,7 +3,7 @@ import {upload} from "../middlewares/multer.middleware.js"
 import { VerifyJWT } from "../middlewares/Auth.middleware.js";
 import { deleteVideo, getVideoById, publishAVideo, togglePublishStatus, updateVideo } from "../controllers/video.controller.js";
 const router = Router();
-router.route("/video-upload").post(
+router.route("/upload").post(
      VerifyJWT ,
     upload.fields([
         {
@@ -16,7 +16,7 @@ router.route("/video-upload").post(
         }
     ]), publishAVideo
 );
-router.route("/video/:videoId")
+router.route("/:videoId")
 .get(getVideoById)
 .patch(
     VerifyJWT,
@@ -24,7 +24,7 @@ router.route("/video/:videoId")
     updateVideo
 );
 
-router.route("/video/delete/:videoId").delete(VerifyJWT, deleteVideo);
-router.route("/video/toggle/:videoId").patch(VerifyJWT, togglePublishStatus);
-router.route("/videos").get(getAllVideos);
+router.route("/delete/:videoId").delete(VerifyJWT, deleteVideo);
+router.route("/toggle/:videoId").patch(VerifyJWT, togglePublishStatus);
+router.route("/").get(getAllVideos);
 export default router;
