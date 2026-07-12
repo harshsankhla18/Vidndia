@@ -227,7 +227,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         aggregatedVideo,
          {
         page : pageNumber, limit : limitNumber
-    },
+    }
     );
     return res.status(200).json(new ApiResponse(200,video,"All videos fetched successfully"));
 });
