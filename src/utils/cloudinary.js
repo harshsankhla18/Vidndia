@@ -6,6 +6,37 @@ cloudinary.config({
         api_key: process.env.CLOUDINARY_API_KEY, 
         api_secret: process.env.CLOUDINARY_API_SECRET 
     });
+const largeFileUploadOnCloudinary = async (localfilepath) => {
+    try {
+        if (!localfilepath) return null;
+
+        const response = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_large(
+                localfilepath,
+                {
+                    resource_type: "video",
+                    chunk_size: 6000000
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+        });
+
+        if (fs.existsSync(localfilepath)) {
+            fs.unlinkSync(localfilepath);
+        }
+        return response;
+    } catch (error) {
+        console.log("CLOUDINARY LARGE UPLOAD ERROR:", error);
+        if (fs.existsSync(localfilepath)) {
+            fs.unlinkSync(localfilepath);
+        }
+
+        return null;
+    }
+};
 const fileUploadOnCloudinary = async (localfilepath) => {
     try{
         if(!localfilepath) return null;
@@ -16,6 +47,7 @@ const fileUploadOnCloudinary = async (localfilepath) => {
         return response;
 
     }catch(error){
+        
         fs.unlinkSync(localfilepath);
         return null;
     }
@@ -27,5 +59,5 @@ const deleteFromCloudinary = async (public_id) => {
         throw new ApiError(500,error?.message || "Error While Deleting from Cloudinary");
    }
 }
-export { fileUploadOnCloudinary, deleteFromCloudinary };
+export { largeFileUploadOnCloudinary,fileUploadOnCloudinary, deleteFromCloudinary };
 
