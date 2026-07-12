@@ -32,4 +32,10 @@ app.use("/api/v1/playlists", playlistRouter);
 import commentRouter from "./routes/comment.routes.js"
 app.use("/api/v1/comments", commentRouter);
 
+import dashboardRouter from "./routes/dashboard.routes.js"
+app.use("/api/v1/dashboard", dashboardRouter);
+
+import healthcheckRouter from "./routes/healthcheck.routes.js"
+app.use("/api/v1/healthcheck", healthcheckRouter);
+
 export { app };
