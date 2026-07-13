@@ -56,7 +56,12 @@ const getVideoById = asyncHandler(async (req, res) => {
     if(!mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"Invalid Video Id");
     }
-    const video = await Video.findById(videoId);
+    const video = await Video.findByIdAndUpdate(videoId, {
+        $inc: { views: 1 }
+    },
+{
+    new:true
+});
     if(!video){
         throw new ApiError(404,"Video not found");
     }
