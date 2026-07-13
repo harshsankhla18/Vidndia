@@ -8,7 +8,8 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
-    const {channelId} = req.params;
+    const {channelId} = req.query;
+    
     if(!mongoose.Types.ObjectId.isValid(channelId)){
         throw new ApiError(400,"Invalid Channel Id");
     }
