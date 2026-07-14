@@ -12,13 +12,15 @@ import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import loginImage from "../assets/loginimage.png"
 import api from "@/api/axios"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { setAccessToken } from "../api/token"
 export function LoginForm({
   className,
   ...props
 }) {
       const [identifier, setIdentifier] = useState("")
       const [password, setPassword] = useState("")
+      const Navigate = useNavigate();
       const handleLogin = async (e) => {
           e.preventDefault()
 
@@ -27,8 +29,9 @@ export function LoginForm({
               identifier,
               password
             })
-
-            console.log(response.data)
+            setAccessToken(response.data.data.accessToken)
+            console.log(response.data.message)
+            Navigate("/home")
           } catch (error) {
             console.log(error.response?.data || error.message)
           }

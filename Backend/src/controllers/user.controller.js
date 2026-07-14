@@ -47,8 +47,8 @@ const registerUser = asyncHandler (async (req,res)=>{
         throw new ApiError(400,"Avatar Upload Failed");
     }
     
-    const localCoverPath = req.files?.coverImage[0].path;
-    const coverImage =await fileUploadOnCloudinary(localCoverPath);
+    const localCoverPath = req.files?.coverImage?.[0]?.path;
+    const coverImage = (localCoverPath) ? await fileUploadOnCloudinary(localCoverPath) : "";
 
     const user = await User.create({
         username : username?.toLowerCase(),
@@ -374,6 +374,48 @@ const getWatchHistory = asyncHandler(async (req,res) => {
 
 
 })
+const addToWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!mongoose.isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Video Id");
+    }
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $pull: {
+                watchHistory: videoId
+            }
+        }
+    );
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $push: {
+                watchHistory: {
+                    $each: [videoId],
+                    $position: 0
+                }
+            }
+        }
+    );
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {},
+            "Video added to watch history"
+        )
+    );
+});
 export { 
     registerUser, 
     loginUser, 
@@ -385,6 +427,7 @@ export {
     updateAvatar, 
     updateCoverImage, 
     getUserChannelProfile, 
-    getWatchHistory
+    getWatchHistory,
+    addToWatchHistory
  };
 
