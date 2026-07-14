@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 
 import api from "@/api/axios"
@@ -13,57 +13,57 @@ function Video() {
   const [comment, setComment] = useState("")
   const [loading, setLoading] = useState(true)
 
-  const fetchComments = async () => {
-    const response = await api.get(
-      `/comments/${videoId}`
-    )
-
-    const commentData =
-      response.data?.data?.docs ||
-      response.data?.data ||
-      []
-
-    setComments(commentData)
-  }
+  const historyAdded = useRef(false)
 
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const [videoResponse, commentResponse] =
-          await Promise.all([
-            api.get(`/videos/${videoId}`),
-            api.get(`/comments/${videoId}`),
-          ])
+        const [videoResponse, commentResponse] = await Promise.all([
+          api.get(`/videos/${videoId}`),
+          api.get(`/comments/${videoId}`),
+        ])
 
-        console.log(
-          "VIDEO:",
-          videoResponse.data
-        )
-
-        console.log(
-          "COMMENTS:",
-          commentResponse.data
-        )
+        console.log("VIDEO:", videoResponse.data)
+        console.log("COMMENTS:", commentResponse.data)
 
         setVideo(videoResponse.data.data)
 
         setComments(
-          commentResponse.data?.data?.docs ||
-          commentResponse.data?.data ||
+          commentResponse.data.data?.docs ||
+          commentResponse.data.data ||
           []
         )
       } catch (error) {
-        console.log(
-          error.response?.data ||
-          error.message
-        )
+        console.log(error.response?.data || error.message)
       } finally {
         setLoading(false)
       }
     }
 
+    historyAdded.current = false
+
     fetchPageData()
   }, [videoId])
+
+  const handleVideoPlay = async () => {
+    if (historyAdded.current) return
+
+    historyAdded.current = true
+
+    try {
+      const response = await api.post(
+        `/users/history/${videoId}`
+      )
+
+      console.log("WATCH HISTORY:", response.data)
+    } catch (error) {
+      historyAdded.current = false
+
+      console.log(
+        error.response?.data || error.message
+      )
+    }
+  }
 
   const handleLike = async () => {
     try {
@@ -71,35 +71,21 @@ function Video() {
         `/likes/toggle/v/${videoId}`
       )
 
-      console.log(
-        "LIKE:",
-        response.data
-      )
+      console.log("LIKE:", response.data)
     } catch (error) {
-      console.log(
-        error.response?.data ||
-        error.message
-      )
+      console.log(error.response?.data || error.message)
     }
   }
 
   const handleSubscribe = async () => {
-    if (!video?.owner?._id) return
-
     try {
       const response = await api.post(
         `/subscriptions/c/${video.owner._id}`
       )
 
-      console.log(
-        "SUBSCRIBE:",
-        response.data
-      )
+      console.log("SUBSCRIBE:", response.data)
     } catch (error) {
-      console.log(
-        error.response?.data ||
-        error.message
-      )
+      console.log(error.response?.data || error.message)
     }
   }
 
@@ -109,21 +95,28 @@ function Video() {
     if (!comment.trim()) return
 
     try {
-      await api.post(
+      const response = await api.post(
         `/comments/${videoId}`,
         {
           content: comment,
         }
       )
 
+      console.log("COMMENT:", response.data)
+
       setComment("")
 
-      await fetchComments()
-    } catch (error) {
-      console.log(
-        error.response?.data ||
-        error.message
+      const commentResponse = await api.get(
+        `/comments/${videoId}`
       )
+
+      setComments(
+        commentResponse.data.data?.docs ||
+        commentResponse.data.data ||
+        []
+      )
+    } catch (error) {
+      console.log(error.response?.data || error.message)
     }
   }
 
@@ -156,6 +149,7 @@ function Video() {
             src={video.videoFile?.url}
             controls
             autoPlay
+            onPlay={handleVideoPlay}
             className="aspect-video w-full rounded-xl bg-black"
           />
 
@@ -166,18 +160,19 @@ function Video() {
           <div className="mt-4 flex items-center justify-between">
 
             <div className="flex items-center gap-3">
-
-              {video.owner?.avatar?.url && (
-                <img
-                  src={video.owner.avatar.url}
-                  alt={video.owner.username}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              )}
+              <img
+                src={video.owner?.avatar?.url}
+                alt={video.owner?.username}
+                className="h-10 w-10 rounded-full object-cover"
+              />
 
               <div>
                 <p className="font-semibold">
                   {video.owner?.username}
+                </p>
+
+                <p className="text-xs text-[#aaaaaa]">
+                  Channel
                 </p>
               </div>
 
@@ -187,7 +182,6 @@ function Video() {
               >
                 Subscribe
               </button>
-
             </div>
 
             <button
@@ -214,19 +208,16 @@ function Video() {
           <div className="mt-8">
 
             <h2 className="text-xl font-bold">
-              {comments.length} Comments
+              Comments
             </h2>
 
             <form
               onSubmit={handleComment}
               className="mt-5 flex gap-3"
             >
-
               <input
                 value={comment}
-                onChange={(e) =>
-                  setComment(e.target.value)
-                }
+                onChange={(e) => setComment(e.target.value)}
                 placeholder="Add a comment..."
                 className="flex-1 border-b border-[#555] bg-transparent px-2 py-2 outline-none focus:border-white"
               />
@@ -237,7 +228,6 @@ function Video() {
               >
                 Comment
               </button>
-
             </form>
 
             <div className="mt-8 space-y-6">
@@ -247,17 +237,13 @@ function Video() {
                   key={item._id}
                   className="flex gap-3"
                 >
-
-                  {item.owner?.avatar?.url && (
-                    <img
-                      src={item.owner.avatar.url}
-                      alt={item.owner.username}
-                      className="h-9 w-9 rounded-full object-cover"
-                    />
-                  )}
+                  <img
+                    src={item.owner?.avatar?.url}
+                    alt={item.owner?.username}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
 
                   <div>
-
                     <p className="text-sm font-semibold">
                       @{item.owner?.username}
                     </p>
@@ -265,9 +251,7 @@ function Video() {
                     <p className="mt-1 text-sm text-[#f1f1f1]">
                       {item.content}
                     </p>
-
                   </div>
-
                 </div>
               ))}
 

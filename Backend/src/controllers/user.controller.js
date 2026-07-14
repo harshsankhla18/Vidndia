@@ -5,6 +5,7 @@ import {deleteFromCloudinary, fileUploadOnCloudinary} from "../utils/cloudinary.
 import  ApiResponse  from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Video } from "../models/video.model.js";
 const generateAccessAndRefreshToken = async (user_id) =>{
     try{
         const user = await User.findById(user_id);
