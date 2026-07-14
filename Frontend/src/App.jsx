@@ -13,6 +13,7 @@ import Playlist from "@/pages/Playlist"
 import Dashboard from "@/pages/Dashboard"
 import Profile from "@/pages/Profile"
 import Settings from "@/pages/Settings"
+import Tweets from "@/pages/Tweets"
 function App() {
   return (
     <div className="dark">
@@ -86,7 +87,7 @@ function App() {
           path="/settings" 
           element={<Settings />} 
         />
-
+        <Route path="/community" element={<Tweets />} />
       </Routes>
     </div>
   )

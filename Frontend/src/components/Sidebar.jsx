@@ -4,7 +4,8 @@ import {
   ThumbsUp,
   ListVideo,
   LayoutDashboard,
-  Upload
+  Upload,
+  MessageSquare
 } from "lucide-react"
 
 import { useNavigate } from "react-router-dom"
@@ -17,6 +18,11 @@ function Sidebar() {
       name: "Home",
       icon: Home,
       path: "/home"
+    },
+    {
+      name: "Community",
+      icon: MessageSquare,
+      path: "/community"
     },
     {
       name: "History",
