@@ -18,16 +18,6 @@ function Dashboard() {
             api.get("/dashboard/videos"),
           ])
 
-        console.log(
-          "STATS:",
-          statsResponse.data
-        )
-
-        console.log(
-          "CHANNEL VIDEOS:",
-          videosResponse.data
-        )
-
         setStats(statsResponse.data?.data)
 
         setVideos(
@@ -69,23 +59,32 @@ function Dashboard() {
 
             <StatCard
               title="Total Views"
-              value={
-                stats?.totalViews || 0
-              }
+              value={stats?.totalViews}
             />
 
             <StatCard
               title="Subscribers"
-              value={
-                stats?.totalSubscribers || 0
-              }
+              value={stats?.subscribers}
             />
 
             <StatCard
-              title="Total Likes"
-              value={
-                stats?.totalLikes || 0
-              }
+              title="Total Videos"
+              value={stats?.totalVideos}
+            />
+
+            <StatCard
+              title="Video Likes"
+              value={stats?.videoLikes}
+            />
+
+            <StatCard
+              title="Community Likes"
+              value={stats?.tweetLikes}
+            />
+
+            <StatCard
+              title="Subscribed Channels"
+              value={stats?.subscribed}
             />
 
           </div>
@@ -96,36 +95,44 @@ function Dashboard() {
 
           <div className="mt-5 overflow-hidden rounded-xl border border-[#272727]">
 
-            {videos.map((video) => (
-              <div
-                key={video._id}
-                className="flex items-center gap-4 border-b border-[#272727] p-4"
-              >
+            {videos.length === 0 ? (
+              <p className="p-6 text-[#aaaaaa]">
+                You haven't uploaded any videos.
+              </p>
+            ) : (
+              videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="flex items-center gap-4 border-b border-[#272727] p-4"
+                >
 
-                <img
-                  src={video.thumbnail?.url}
-                  alt={video.title}
-                  className="h-20 w-36 rounded-lg object-cover"
-                />
+                  <img
+                    src={video.thumbnail?.url}
+                    alt={video.title}
+                    className="h-20 w-36 rounded-lg object-cover"
+                  />
 
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {video.title}
-                  </p>
+                  <div className="flex-1">
+
+                    <p className="font-semibold">
+                      {video.title}
+                    </p>
+
+                    <p className="text-sm text-[#aaaaaa]">
+                      {video.views || 0} views
+                    </p>
+
+                  </div>
 
                   <p className="text-sm text-[#aaaaaa]">
-                    {video.views || 0} views
+                    {video.isPublished
+                      ? "Published"
+                      : "Private"}
                   </p>
+
                 </div>
-
-                <p className="text-sm text-[#aaaaaa]">
-                  {video.isPublished
-                    ? "Published"
-                    : "Private"}
-                </p>
-
-              </div>
-            ))}
+              ))
+            )}
 
           </div>
 
@@ -138,13 +145,15 @@ function Dashboard() {
 function StatCard({ title, value }) {
   return (
     <div className="rounded-xl bg-[#272727] p-6">
+
       <p className="text-sm text-[#aaaaaa]">
         {title}
       </p>
 
       <p className="mt-3 text-3xl font-bold">
-        {value}
+        {value ?? 0}
       </p>
+
     </div>
   )
 }

@@ -4,32 +4,42 @@ import {ApiError} from "../utils/ApiError.js"
 import ApiResponse from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 const toggleVideoLike = asyncHandler(async (req, res) => {
-    const {videoId} = req.params;
-    if(!mongoose.Types.ObjectId.isValid(videoId)){
-        throw new ApiError(400,"Invalid Video Id");
+    const { videoId } = req.params
+
+    const existingLike = await Like.findOne({
+        video: videoId,
+        likedBy: req.user._id
+    })
+
+    let isLiked
+
+    if (existingLike) {
+        await Like.findByIdAndDelete(existingLike._id)
+        isLiked = false
+    } else {
+        await Like.create({
+            video: videoId,
+            likedBy: req.user._id
+        })
+
+        isLiked = true
     }
-    const isVideoLiked = await Like.findOne({
-        video : videoId,
-        likedBy : req.user._id
-    });
-    if(isVideoLiked){
-         await Like.findOneAndDelete({
-             video : videoId,
-             likedBy : req.user._id
-            });
-        return res.status(200).json(new ApiResponse(200,{},"unLiked"));
-    }else{
-        const like = await Like.create({
-                video : videoId,
-                likedBy : req.user._id
-            });
-        if(!like){
-                    throw new ApiError(500,"Error While liking");
-                }
-        return res.status(200).json(new ApiResponse(200,like,"Liked"));
-    }
-    
-});
+
+    const likesCount = await Like.countDocuments({
+        video: videoId
+    })
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                isLiked,
+                likesCount
+            },
+            isLiked ? "Video liked" : "Video unliked"
+        )
+    )
+})
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params

@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
+import {
+  ThumbsUp,
+  UserPlus,
+  UserCheck,
+} from "lucide-react"
 
 import api from "@/api/axios"
 import Navbar from "@/components/Navbar"
@@ -13,20 +18,39 @@ function Video() {
   const [comment, setComment] = useState("")
   const [loading, setLoading] = useState(true)
 
+  const [isLiked, setIsLiked] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [likesCount, setLikesCount] = useState(0)
+  const [subscribersCount, setSubscribersCount] = useState(0)
+
   const historyAdded = useRef(false)
 
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const [videoResponse, commentResponse] = await Promise.all([
-          api.get(`/videos/${videoId}`),
-          api.get(`/comments/${videoId}`),
-        ])
+        const [videoResponse, commentResponse] =
+          await Promise.all([
+            api.get(`/videos/${videoId}`),
+            api.get(`/comments/${videoId}`),
+          ])
 
-        console.log("VIDEO:", videoResponse.data)
-        console.log("COMMENTS:", commentResponse.data)
+        const videoData = videoResponse.data.data
 
-        setVideo(videoResponse.data.data)
+        console.log("VIDEO DATA:", videoData)
+
+        setVideo(videoData)
+
+        setIsLiked(Boolean(videoData.isLiked))
+
+        setIsSubscribed(
+          Boolean(videoData.owner?.isSubscribed)
+        )
+
+        setLikesCount(videoData.likesCount || 0)
+
+        setSubscribersCount(
+          videoData.owner?.subscribersCount || 0
+        )
 
         setComments(
           commentResponse.data.data?.docs ||
@@ -34,7 +58,9 @@ function Video() {
           []
         )
       } catch (error) {
-        console.log(error.response?.data || error.message)
+        console.log(
+          error.response?.data || error.message
+        )
       } finally {
         setLoading(false)
       }
@@ -51,11 +77,7 @@ function Video() {
     historyAdded.current = true
 
     try {
-      const response = await api.post(
-        `/users/history/${videoId}`
-      )
-
-      console.log("WATCH HISTORY:", response.data)
+      await api.post(`/users/history/${videoId}`)
     } catch (error) {
       historyAdded.current = false
 
@@ -65,29 +87,47 @@ function Video() {
     }
   }
 
-  const handleLike = async () => {
-    try {
-      const response = await api.post(
-        `/likes/toggle/v/${videoId}`
-      )
+ const handleLike = async () => {
+  try {
+    await api.post(`/likes/toggle/v/${videoId}`)
 
-      console.log("LIKE:", response.data)
-    } catch (error) {
-      console.log(error.response?.data || error.message)
-    }
+    const previousLikedState = isLiked
+
+    setIsLiked(!previousLikedState)
+
+    setLikesCount((count) =>
+      previousLikedState
+        ? Math.max(count - 1, 0)
+        : count + 1
+    )
+  } catch (error) {
+    console.log(
+      error.response?.data || error.message
+    )
   }
+}
 
-  const handleSubscribe = async () => {
-    try {
-      const response = await api.post(
-        `/subscriptions/c/${video.owner._id}`
-      )
+const handleSubscribe = async () => {
+  try {
+    await api.post(
+      `/subscriptions/c/${video.owner._id}`
+    )
 
-      console.log("SUBSCRIBE:", response.data)
-    } catch (error) {
-      console.log(error.response?.data || error.message)
-    }
+    const previousSubscribedState = isSubscribed
+
+    setIsSubscribed(!previousSubscribedState)
+
+    setSubscribersCount((count) =>
+      previousSubscribedState
+        ? Math.max(count - 1, 0)
+        : count + 1
+    )
+  } catch (error) {
+    console.log(
+      error.response?.data || error.message
+    )
   }
+}
 
   const handleComment = async (e) => {
     e.preventDefault()
@@ -95,28 +135,25 @@ function Video() {
     if (!comment.trim()) return
 
     try {
-      const response = await api.post(
-        `/comments/${videoId}`,
-        {
-          content: comment,
-        }
-      )
-
-      console.log("COMMENT:", response.data)
+      await api.post(`/comments/${videoId}`, {
+        content: comment,
+      })
 
       setComment("")
 
-      const commentResponse = await api.get(
+      const response = await api.get(
         `/comments/${videoId}`
       )
 
       setComments(
-        commentResponse.data.data?.docs ||
-        commentResponse.data.data ||
+        response.data.data?.docs ||
+        response.data.data ||
         []
       )
     } catch (error) {
-      console.log(error.response?.data || error.message)
+      console.log(
+        error.response?.data || error.message
+      )
     }
   }
 
@@ -139,7 +176,6 @@ function Video() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <Navbar />
-
       <Sidebar />
 
       <main className="ml-60 pt-16">
@@ -160,6 +196,7 @@ function Video() {
           <div className="mt-4 flex items-center justify-between">
 
             <div className="flex items-center gap-3">
+
               <img
                 src={video.owner?.avatar?.url}
                 alt={video.owner?.username}
@@ -172,23 +209,49 @@ function Video() {
                 </p>
 
                 <p className="text-xs text-[#aaaaaa]">
-                  Channel
+                  {subscribersCount} subscribers
                 </p>
               </div>
 
               <button
                 onClick={handleSubscribe}
-                className="ml-4 rounded-full bg-white px-5 py-2 text-sm font-semibold text-black"
+                className={`ml-4 flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold ${
+                  isSubscribed
+                    ? "bg-[#272727] text-white"
+                    : "bg-white text-black"
+                }`}
               >
-                Subscribe
+                {isSubscribed ? (
+                  <UserCheck size={18} />
+                ) : (
+                  <UserPlus size={18} />
+                )}
+
+                {isSubscribed
+                  ? "Subscribed"
+                  : "Subscribe"}
               </button>
+
             </div>
 
             <button
               onClick={handleLike}
-              className="rounded-full bg-[#272727] px-5 py-2 hover:bg-[#3f3f3f]"
+              className={`flex items-center gap-2 rounded-full px-5 py-2 ${
+                isLiked
+                  ? "bg-white text-black"
+                  : "bg-[#272727] text-white"
+              }`}
             >
-              👍 Like
+              <ThumbsUp
+                size={20}
+                fill={
+                  isLiked
+                    ? "currentColor"
+                    : "none"
+                }
+              />
+
+              <span>{likesCount}</span>
             </button>
 
           </div>
@@ -217,7 +280,9 @@ function Video() {
             >
               <input
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={(e) =>
+                  setComment(e.target.value)
+                }
                 placeholder="Add a comment..."
                 className="flex-1 border-b border-[#555] bg-transparent px-2 py-2 outline-none focus:border-white"
               />

@@ -17,7 +17,7 @@ router.route("/upload").post(
     ]), publishAVideo
 );
 router.route("/:videoId")
-.get(getVideoById)
+.get(VerifyJWT, getVideoById)
 .patch(
     VerifyJWT,
     upload.single("thumbnail"),

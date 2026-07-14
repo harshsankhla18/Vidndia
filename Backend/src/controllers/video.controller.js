@@ -8,7 +8,7 @@ import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Playlist } from "../models/playlist.model.js";
 import { User } from "../models/user.model.js";
-
+import { Subscription } from "../models/subscription.model.js";
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body
     if(!title?.trim()){
@@ -53,19 +53,80 @@ const publishAVideo = asyncHandler(async (req, res) => {
 });
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
-    if(!mongoose.Types.ObjectId.isValid(videoId)){
-        throw new ApiError(400,"Invalid Video Id");
+
+    if (!mongoose.Types.ObjectId.isValid(videoId)) {
+        throw new ApiError(400, "Invalid Video Id");
     }
-    const video = await Video.findByIdAndUpdate(videoId, {
-        $inc: { views: 1 }
-    },
-{
-    new:true
-});
-    if(!video){
-        throw new ApiError(404,"Video not found");
+
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc: {
+                views: 1
+            }
+        },
+        {
+            new: true
+        }
+    )
+    .populate(
+        "owner",
+        "username fullName avatar"
+    )
+    .lean();
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
     }
-    return res.status(200).json(new ApiResponse(200,video,"Video Found"));
+
+    const [
+        isLiked,
+        likesCount,
+        isSubscribed,
+        subscribersCount
+    ] = await Promise.all([
+        Like.exists({
+            video: videoId,
+            likedBy: req.user._id
+        }),
+
+        Like.countDocuments({
+            video: videoId
+        }),
+
+        Subscription.exists({
+            channel: video.owner._id,
+            subscriber: req.user._id
+        }),
+
+        Subscription.countDocuments({
+            channel: video.owner._id
+        })
+    ]);
+
+    const videoData = {
+        ...video,
+
+        isLiked: Boolean(isLiked),
+
+        likesCount,
+
+        owner: {
+            ...video.owner,
+
+            isSubscribed: Boolean(isSubscribed),
+
+            subscribersCount
+        }
+    };
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            videoData,
+            "Video Found"
+        )
+    );
 });
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
