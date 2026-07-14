@@ -57,16 +57,20 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="file">Avatar</FieldLabel>
-                <Input id="full-name" type="file" placeholder="Please Upload a Profile Image" required />
-              </Field>
-              <Field>
                 <FieldLabel htmlFor="name">Username</FieldLabel>
                 <Input id="username" type="text" placeholder="username" required />
               </Field>
               <Field>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input id="full-name" type="text" placeholder="e.g. Harsh Sankhla" required />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="file">Avatar</FieldLabel>
+                <Input id="full-name" type="file" placeholder="Please Upload a Profile Image" required />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="file">Cover Image</FieldLabel>
+                <Input id="full-name" type="file" placeholder="Please Upload a Profile Image"/>
               </Field>
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
